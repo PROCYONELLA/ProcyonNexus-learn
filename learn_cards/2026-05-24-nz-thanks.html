@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NZ Ways to Say Thanks — Procyon Learn</title>
+<style>
+  :root {
+    --bg: #0e1116; --panel: #181c22; --border: #2a313a;
+    --fg: #e6e9ee; --muted: #9aa4b2; --accent: #7dc4ff; --accent-soft: rgba(125,196,255,0.15);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 1.1rem; font-family: -apple-system, "SF Pro Text", "PingFang TC", system-ui, sans-serif;
+    background: var(--bg); color: var(--fg); line-height: 1.55; max-width: 880px; margin: 0 auto;
+  }
+  h1 { font-size: 1.45rem; margin: .2rem 0 .4rem; }
+  h1 .zh { color: var(--muted); font-weight: 400; font-size: .85em; margin-left: .4em; }
+  .meta { color: var(--muted); font-size: .8rem; margin-bottom: 1.3rem; }
+  .word-list { display: flex; flex-direction: column; gap: .7rem; margin: 1rem 0; }
+  .word {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem; padding: .8rem 1rem;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .word .term { font-weight: 600; font-size: 1.1rem; }
+  .word .gloss { color: var(--muted); font-size: .9rem; flex-basis: 100%; margin-top: .25rem; }
+  .word .scene { color: var(--accent); font-size: .82rem; flex-basis: 100%; margin-top: .15rem; font-style: italic; }
+  button.speak {
+    appearance: none; border: 1px solid var(--border); background: transparent; color: var(--accent);
+    border-radius: 999px; padding: .15rem .6rem; font-size: .9rem; cursor: pointer;
+    transition: background .15s;
+  }
+  button.speak:hover, button.speak:active { background: var(--accent-soft); }
+  .register-casual { color: #6ddc8a; font-size: .78rem; }
+  .register-neutral { color: #e0c46c; font-size: .78rem; }
+  .register-formal { color: #f08585; font-size: .78rem; }
+  .note { padding: .8rem 1rem; background: var(--accent-soft); border-left: 3px solid var(--accent);
+          border-radius: 6px; font-size: .88rem; margin-top: 1.2rem; }
+  footer { color: var(--muted); font-size: .75rem; margin-top: 2rem; text-align: center; }
+  footer a { color: var(--accent); text-decoration: none; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #fff; --panel: #f6f8fa; --border: #d0d7de; --fg: #1f2328; --muted: #57606a; --accent: #0969da; --accent-soft: rgba(9,105,218,0.1); }
+  }
+</style>
+</head>
+<body>
+
+<h1>NZ Ways to Say Thanks<span class="zh">紐西蘭怎麼說「謝謝」</span></h1>
+<div class="meta">2026-05-24 · Tap 🔊 to hear pronunciation (uses iOS/Mac system voice)</div>
+
+<div class="word-list">
+
+  <div class="word">
+    <span class="term">Thank you very much</span>
+    <button class="speak" onclick="speak('Thank you very much','en-NZ')">🔊</button>
+    <span class="register-formal">🔴 formal / textbook</span>
+    <span class="gloss">— 教科書版，任何場合不會錯，但 kiwi 之間反而少用、稍正式</span>
+    <span class="scene">場景：寫 email 給教授、初次見面、商業書信</span>
+  </div>
+
+  <div class="word">
+    <span class="term">Cheers</span>
+    <button class="speak" onclick="speak('Cheers','en-NZ')">🔊</button>
+    <span class="register-neutral">🟡 neutral</span>
+    <span class="gloss">— 全 NZ/AU/UK 通用「謝啦」，比 thanks 更道地、適用範圍最廣</span>
+    <span class="scene">場景：店員找零、同事幫你開門、Uber 司機載到</span>
+  </div>
+
+  <div class="word">
+    <span class="term">Chur</span>
+    <button class="speak" onclick="speak('Chur','en-NZ')">🔊</button>
+    <span class="register-casual">🟢 casual</span>
+    <span class="gloss">— Kiwi 獨有，源自毛利語影響；男生間最常用，發音像「chur」（接近台語「就」）</span>
+    <span class="scene">場景：朋友幫你拿啤酒、隊友 pass 球給你、收到 mate 的 text 回一句</span>
+  </div>
+
+  <div class="word">
+    <span class="term">Chur bro</span>
+    <button class="speak" onclick="speak('Chur bro','en-NZ')">🔊</button>
+    <span class="register-casual">🟢 very casual</span>
+    <span class="gloss">— Chur 的加強版，明確對男性同輩；對長輩/老闆/陌生女性不用</span>
+    <span class="scene">場景：球場、海灘、酒吧；不會對護理長或主治說</span>
+  </div>
+
+  <div class="word">
+    <span class="term">Ta</span>
+    <button class="speak" onclick="speak('Ta','en-NZ')">🔊</button>
+    <span class="register-casual">🟢 casual</span>
+    <span class="gloss">— 從英式英語繼承的超短「謝」，發音像「tar」，常用於接過小東西時</span>
+    <span class="scene">場景：店員遞袋子、同事傳遞文件</span>
+  </div>
+
+  <div class="word">
+    <span class="term">Sweet as</span>
+    <button class="speak" onclick="speak('Sweet as','en-NZ')">🔊</button>
+    <span class="register-casual">🟢 casual</span>
+    <span class="gloss">— 「沒問題/讚啦」，常作為「謝謝+收到」的合體回應，as 後面什麼都沒有（這就是 kiwi 特色）</span>
+    <span class="scene">場景：朋友說「明天 7 點接你」→ 你回「Sweet as!」</span>
+  </div>
+
+  <div class="word">
+    <span class="term">Kia ora</span>
+    <button class="speak" onclick="speak('Kia ora','en-NZ')">🔊</button>
+    <span class="register-neutral">🟡 neutral / cultural</span>
+    <span class="gloss">— 毛利語「你好/謝謝/保重」一語多用，現在政府/媒體/商業都會用，顯尊重原住民文化</span>
+    <span class="scene">場景：email 開頭、官方場合、想表達對 te reo Māori 的尊重時</span>
+  </div>
+
+</div>
+
+<div class="note">
+💡 <strong>關鍵抉擇</strong>：對長輩/工作場合 → <em>Thank you</em> 或 <em>Cheers</em>；對同輩朋友 → <em>Chur</em>、<em>Cheers</em>；最高級 kiwi 道地 → <em>Chur bro / Sweet as</em>。亂用 Chur bro 對教授會像台灣人對主治說「謝啦兄弟」。
+</div>
+
+<footer>
+  Generated by <a href="https://github.com/PROCYONELLA/ProcyonNexus">/learn</a> · Demo card · 2026-05-24
+</footer>
+
+<script>
+  function speak(text, lang = 'en-US', rate = 0.92) {
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang; u.rate = rate;
+      const voices = window.speechSynthesis.getVoices();
+      const match = voices.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()))
+                  || voices.find(v => v.lang.toLowerCase().startsWith(lang.split('-')[0]));
+      if (match) u.voice = match;
+      window.speechSynthesis.speak(u);
+    } catch (e) { console.warn('TTS unavailable', e); }
+  }
+  if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.onvoiceschanged = () => {};
+  }
+</script>
+</body>
+</html>

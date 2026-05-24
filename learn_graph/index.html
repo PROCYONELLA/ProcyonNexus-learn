@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>Learn Graph</title>
+<script src="vendor/cytoscape.min.js"></script>
+<script src="vendor/layout-base.js"></script>
+<script src="vendor/cose-base.js"></script>
+<script src="vendor/cytoscape-fcose.js"></script>
+<script src="./data.js"></script>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+    --c-disease: #F87171; --c-symptom: #FB7185; --c-mechanism: #FBBF24;
+    --c-drug: #34D399; --c-anatomy: #22D3EE; --c-theory: #A78BFA; --c-other: #94A3B8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, "PingFang TC", sans-serif; overflow: hidden; }
+  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 44px; background: var(--panel); display: flex; align-items: center; padding: 0 12px; gap: 10px; z-index: 10; border-bottom: 1px solid #334155; flex-wrap: wrap; }
+  #topbar h1 { font-size: 13px; font-weight: 600; }
+  #topbar .stats { font-size: 11px; color: var(--muted); }
+  #topbar input { flex: 0 0 180px; padding: 5px 8px; background: #0f172a; border: 1px solid #334155; border-radius: 5px; color: var(--text); font-size: 12px; }
+  #topbar button { padding: 5px 10px; background: #334155; border: none; border-radius: 5px; color: var(--text); font-size: 11px; cursor: pointer; }
+  #topbar button:hover { background: #475569; }
+  .legend { display: flex; gap: 8px; margin-left: auto; font-size: 10px; flex-wrap: wrap; }
+  .legend span { display: flex; align-items: center; gap: 3px; }
+  .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  #cy { position: fixed; top: 44px; left: 0; right: 0; bottom: 0; }
+  #popover { position: fixed; background: var(--panel); border: 1px solid #475569; border-radius: 8px; padding: 12px; min-width: 220px; max-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; z-index: 20; }
+  #popover h3 { font-size: 13px; margin-bottom: 6px; word-break: break-word; }
+  #popover .meta { font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+  #popover .links a { color: var(--accent); text-decoration: none; display: block; margin: 2px 0; font-size: 11px; }
+  #popover .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  #popover button { flex: 1; padding: 5px 8px; background: #334155; border: none; border-radius: 4px; color: var(--text); font-size: 10px; cursor: pointer; }
+  #popover button.primary { background: var(--accent); color: #0f172a; font-weight: 600; }
+  #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--panel); padding: 8px 14px; border-radius: 6px; border: 1px solid #475569; font-size: 12px; display: none; z-index: 30; }
+  #empty { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--muted); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<div id="topbar">
+  <h1>Learn Graph</h1>
+  <span class="stats" id="stats">0 nodes · 0 edges</span>
+  <input id="search" placeholder="Search…">
+  <button onclick="location.reload()">↻</button>
+  <button onclick="fitView()">Fit</button>
+  <div class="legend">
+    <span><i style="background:var(--c-disease)"></i>Disease</span>
+    <span><i style="background:var(--c-symptom)"></i>Symptom</span>
+    <span><i style="background:var(--c-mechanism)"></i>Mechanism</span>
+    <span><i style="background:var(--c-drug)"></i>Drug</span>
+    <span><i style="background:var(--c-anatomy)"></i>Anatomy</span>
+    <span><i style="background:var(--c-theory)"></i>Theory</span>
+    <span><i style="background:var(--c-other)"></i>Other</span>
+  </div>
+</div>
+<div id="cy"></div>
+<div id="empty" style="display:none">尚無 graph 資料。執行 /learn 任一主題後會自動填入。</div>
+<div id="popover"></div>
+<div id="toast"></div>
+
+<script>
+const COLORS = {
+  Disease: getCSS('--c-disease'), Symptom: getCSS('--c-symptom'),
+  Mechanism: getCSS('--c-mechanism'), Pathway: getCSS('--c-mechanism'),
+  Drug: getCSS('--c-drug'), Anatomy: getCSS('--c-anatomy'),
+  Theory: getCSS('--c-theory'), Framework: getCSS('--c-theory'), Principle: getCSS('--c-theory'),
+};
+function getCSS(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function colorFor(type) { return COLORS[type] || getCSS('--c-other'); }
+
+let cy = null;
+
+function toElements(data) {
+  const nodes = data.nodes.map(n => ({
+    data: { id: n.id, label: n.label, type: n.type || 'Other', session: n.session || '', path: n.path || '' }
+  }));
+  const edges = data.edges.map((e, i) => ({
+    data: { id: 'e' + i, source: e.from, target: e.to, label: e.predicate || '' }
+  }));
+  return [...nodes, ...edges];
+}
+
+function render() {
+  const data = window.GRAPH_DATA || { nodes: [], edges: [] };
+  document.getElementById('stats').textContent = `${data.nodes.length} nodes · ${data.edges.length} edges`;
+  document.getElementById('empty').style.display = data.nodes.length === 0 ? 'block' : 'none';
+  if (data.nodes.length === 0) return;
+
+  // Compute degree per node (for Obsidian-style sizing: more connections → bigger circle)
+  const degree = {};
+  data.edges.forEach(e => { degree[e.from] = (degree[e.from] || 0) + 1; degree[e.to] = (degree[e.to] || 0) + 1; });
+  const sizeFor = id => 14 + Math.min(degree[id] || 0, 8) * 4;   // 14px → 46px
+
+  cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: toElements(data),
+    wheelSensitivity: 0.4, minZoom: 0.15, maxZoom: 5,
+    style: [
+      { selector: 'node', style: {
+        'background-color': ele => colorFor(ele.data('type')),
+        'label': 'data(label)',
+        'color': '#cbd5e1', 'font-size': '11px', 'font-weight': 500,
+        'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 4,
+        'text-wrap': 'wrap', 'text-max-width': '140px',
+        'text-outline-width': 2, 'text-outline-color': '#0f172a',
+        'width': ele => sizeFor(ele.id()), 'height': ele => sizeFor(ele.id()),
+        'shape': 'ellipse', 'border-width': 0,
+        'overlay-opacity': 0
+      }},
+      { selector: 'edge', style: {
+        'width': 1, 'line-color': '#334155', 'opacity': 0.7,
+        'target-arrow-color': '#475569', 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8,
+        'curve-style': 'bezier',
+        'label': 'data(label)', 'font-size': '9px', 'color': '#64748b',
+        'text-rotation': 'autorotate', 'text-margin-y': -6,
+        'text-background-color': '#0f172a', 'text-background-opacity': 0.7, 'text-background-padding': 2
+      }},
+      { selector: 'node:selected', style: {
+        'border-width': 3, 'border-color': '#38bdf8',
+        'text-outline-color': '#38bdf8'
+      }},
+      { selector: 'node.faded', style: { 'opacity': 0.15 }},
+      { selector: 'edge.faded', style: { 'opacity': 0.05 }},
+      { selector: 'node.highlight', style: { 'border-width': 2, 'border-color': '#38bdf8' }},
+      { selector: 'edge.highlight', style: { 'line-color': '#38bdf8', 'target-arrow-color': '#38bdf8', 'opacity': 1, 'width': 2 }},
+    ]
+  });
+
+  // Obsidian-like force-directed layout: lots of breathing room
+  if (typeof cytoscape.use === 'function' && window.cytoscapeFcose) {
+    try { cytoscape.use(window.cytoscapeFcose); } catch (_) {}
+    cy.layout({
+      name: 'fcose',
+      animate: true, animationDuration: 800, animationEasing: 'ease-out',
+      randomize: true, quality: 'proof',
+      nodeRepulsion: () => 45000,         // strong repulsion = spread out
+      idealEdgeLength: () => 180,         // longer edges
+      nodeSeparation: 120,
+      edgeElasticity: () => 0.4,
+      gravity: 0.2, gravityRange: 3.0,
+      numIter: 3000,
+      tile: false,
+      packComponents: true
+    }).run();
+  } else {
+    cy.layout({ name: 'cose', animate: true, nodeRepulsion: 400000, idealEdgeLength: 150 }).run();
+  }
+
+  // Hover highlight neighbourhood (Obsidian-like)
+  cy.on('mouseover', 'node', evt => {
+    const n = evt.target;
+    const neighborhood = n.closedNeighborhood();
+    cy.elements().difference(neighborhood).addClass('faded');
+    neighborhood.removeClass('faded').addClass('highlight');
+  });
+  cy.on('mouseout', 'node', () => {
+    cy.elements().removeClass('faded').removeClass('highlight');
+  });
+
+  cy.on('tap', 'node', evt => showPopover(evt.target));
+  cy.on('tap', evt => { if (evt.target === cy) hidePopover(); });
+}
+
+function showPopover(node) {
+  const d = node.data();
+  const pos = node.renderedPosition();
+  const pop = document.getElementById('popover');
+  const path = d.path ? `obsidian://open?vault=ProcyonNexus&file=${encodeURIComponent(d.path)}` : '';
+  pop.innerHTML = `
+    <h3>${escapeHtml(d.label)}</h3>
+    <div class="meta">${d.type} · session: ${d.session || '—'}</div>
+    ${path ? `<div class="links"><a href="${path}" target="_blank">→ 開啟 ZK 筆記</a></div>` : ''}
+    <div class="actions">
+      <button class="primary" onclick="copyPrompt('${escapeAttr(d.label)}')">複製追問 prompt</button>
+      <button onclick="hidePopover()">關閉</button>
+    </div>
+  `;
+  pop.style.display = 'block';
+  pop.style.left = Math.min(pos.x + 20, window.innerWidth - 320) + 'px';
+  pop.style.top = Math.min(pos.y + 60, window.innerHeight - 200) + 'px';
+}
+
+function hidePopover() { document.getElementById('popover').style.display = 'none'; }
+
+function copyPrompt(label) {
+  const prompt = `/learn 深入「${label}」這個概念，特別是它與目前 graph 中其他節點的關聯`;
+  navigator.clipboard.writeText(prompt).then(() => toast('已複製：' + prompt));
+}
+
+function fitView() { if (cy) cy.fit(null, 50); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase();
+  if (!cy) return;
+  cy.nodes().forEach(n => {
+    const match = !q || n.data('label').toLowerCase().includes(q);
+    n.style('opacity', match ? 1 : 0.15);
+  });
+});
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s) { return String(s).replace(/'/g, "\\'"); }
+
+render();
+</script>
+</body>
+</html>
